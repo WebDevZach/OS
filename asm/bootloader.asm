@@ -47,7 +47,11 @@ load_kernel:
 
 	; Put your code here to disable the blinking cursor
 	; The blinking cursor can only be disabled in real mode using BIOS interrupt int 0x10
-	
+
+	mov cx, 0x2607
+	mov ah, 0x01
+	int 0x10
+
 	ret
 
 [bits 32]

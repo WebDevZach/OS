@@ -16,8 +16,8 @@ void initkeymap();
 char getchar();
 void scanf(char address[]);
 
-void setcursor(int x, int y);
-char putchar(char character);
+char* setcursor(int x, int y);
+void putchar(char character, char* cursorPosition);
 int printf(char string[]);
 int printint(uint32 n);
 void clearscreen();
