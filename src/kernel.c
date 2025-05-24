@@ -5,8 +5,11 @@ int main()
 	// Clear the screen
 	clearscreen();
 
-	//Print "Hello World!"
-	printf("Hello World!");
+	// Test for print to row 20 
+	//setcursor(0,20);
+
+	//Print "Hello World!" + test for new line character
+	printf("Hello World! \nHello World!");
 	
 	return 0;
 }

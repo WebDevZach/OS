@@ -16,8 +16,9 @@ void initkeymap();
 char getchar();
 void scanf(char address[]);
 
-char* setcursor(int x, int y);
-void putchar(char character, char* cursorPosition);
+char* convertRowColumnToMemAddress(int x, int y);
+void setcursor(int x, int y);
+char putchar(char character);
 int printf(char string[]);
 int printint(uint32 n);
 void clearscreen();
