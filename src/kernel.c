@@ -5,11 +5,20 @@ int main()
 	// Clear the screen
 	clearscreen();
 
-	// Test for print to row 20 
-	//setcursor(0,20);
+	// initialize key map
+	initkeymap();
 
-	//Print "Hello World!" + test for new line character
-	printf("Hello World! \nHello World!");
+	// Max user string 100 chars
+	char userString[100] = {};
+
+	// Loops menu infinitely 
+	while(1==1)
+	{
+		printf("Please type to the screen: "); // Prompt user
+		scanf(userString); // Populates user array with typed chars from keyboard
+		printf(userString); // Prints user array 
+		printf("\n"); // Goes to next line 
+	}
 	
 	return 0;
 }

@@ -85,9 +85,8 @@ char putchar(char character)
     }
 
     // Returns cursor row + column to (0,0) if cursorRow is out of bounds 
-    if(cursorRow > 25) {
-        cursorCol = 0;
-        cursorRow = 0; 
+    if(cursorRow > 24) {
+       clearscreen();
     }
 
     // converts row + column to a memory address to print to screen
@@ -144,9 +143,12 @@ void clearscreen()
         }
     }
 
+    setcursor(0,0);
+
 	return;
 }
 
+// Converts scan code to ascii 
 void initkeymap() {
     keymap[0x1E] = 'a';
     keymap[0x30] = 'b';
@@ -173,7 +175,7 @@ void initkeymap() {
     keymap[0x11] = 'w';
     keymap[0x2d] = 'x';
     keymap[0x15] = 'y';
-    keymap[0x1E] = 'z';
+    keymap[0x2c] = 'z';
     keymap[0x0b] = '0';
     keymap[0x02] = '1';
     keymap[0x03] = '2';
@@ -187,4 +189,41 @@ void initkeymap() {
     keymap[0x1c] = '\n';
     keymap[0x39] = ' ';
 
+}
+
+char getchar() {
+
+while((inb(0x64) & 0x01) == 0) {
+
+}
+
+uint8 scanCode;
+
+// reads port x60 for until a pressed scan code (bit 7 = 0)
+do {
+scanCode = inb(0x60); 
+
+} while((scanCode & 0x80) == 0x80);
+
+// Converts scan code to ascii 
+return (char)keymap[scanCode];
+
+}
+
+void scanf(char address[]) {   
+
+// Reads in max 100 chars 
+for(int i = 0; i < 100; i++) {
+char scannedChar = getchar(); 
+
+// base case -> enter inputted returns + adds null terminator to the end
+if(scannedChar == '\n') {
+    address[i] = '\0';
+    return;
+}
+
+address[i] = scannedChar; // put ascii char in user's array 
+}
+
+return;
 }
