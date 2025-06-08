@@ -199,7 +199,7 @@ while((inb(0x64) & 0x01) == 0) {
 
 uint8 scanCode;
 
-// reads port x60 for until a pressed scan code (bit 7 = 0)
+// reads port x60 until a pressed scan code (bit 7 = 0)
 do {
 scanCode = inb(0x60); 
 
