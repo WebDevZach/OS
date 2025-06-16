@@ -227,3 +227,38 @@ address[i] = scannedChar; // put ascii char in user's array
 
 return;
 }
+
+void banner() {
+    uint8 textColor = 0x4A;
+    char* vidMem = (char*) 0xB8000;
+
+    int stringLength = 0;
+    char userString[] = "Welcome to my OS";
+
+    for(int i = 0; i < 80; i++){
+        *vidMem = ' ';
+        vidMem++;
+        *vidMem = 0x10;
+        vidMem++;
+    }
+    
+    int index = 0;
+    while(userString[index] != '\0') {
+        stringLength++;
+        index++;
+    }
+
+    int centeredString = (80 - stringLength)/2;
+
+    char* memPointer = VIDEO_MEM + centeredString * 2; 
+
+    for(int i = 0; i < stringLength; i++){
+        *memPointer = userString[i];
+        memPointer++;
+        *memPointer = textColor;
+        memPointer++;
+    }
+     
+}
+
+

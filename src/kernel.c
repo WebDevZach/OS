@@ -6,12 +6,12 @@ int main()
 	clearscreen();
 
 	// initialize key map
-	initkeymap();
+	//initkeymap();
 
 	// Max user string 100 chars
 	char userString[100] = {};
 
-	// Loops menu infinitely 
+	/*Loops menu infinitely 
 	while(1==1)
 	{
 		printf("Please type to the screen: "); // Prompt user
@@ -19,6 +19,9 @@ int main()
 		printf(userString); // Prints user array 
 		printf("\n"); // Goes to next line 
 	}
-	
+	*/
+
+	banner();
+
 	return 0;
 }
