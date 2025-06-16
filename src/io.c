@@ -228,7 +228,7 @@ address[i] = scannedChar; // put ascii char in user's array
 return;
 }
 
-void banner() {
+/* void banner() {
     uint8 textColor = 0x4A;
     char* vidMem = (char*) 0xB8000;
 
@@ -258,7 +258,26 @@ void banner() {
         *memPointer = textColor;
         memPointer++;
     }
-     
+*/
+
+/* //Used for solving the shortest time process pointer just equals first element
+void bubbleSort(int myArray[]) {
+
+    //can use sizeof(myArray[])/sizeof(myArray[0]) to find the length (this only works if array is not an agruement size of takes byte size of pointer then)
+
+    for (int i = 0; i < myArraySize - 1; i++) {
+        for (int x = 0; x < size - 1 - x; x++) {
+            if (myArray[x] > myArray[x + 1]) {
+                // Swap
+                int temp = myArray[x];
+                myArray[x] = myArray[x + 1];
+                myArray[x + 1] = temp;
+            }
+        }
+    }
 }
+*/
+     
+
 
 
