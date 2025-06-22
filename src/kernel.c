@@ -1,27 +1,59 @@
 #include "./io.h"
+#include "./multitasking.h"
+#include "./irq.h"
+#include "./isr.h"
+
+void prockernel();
+void proc_a();
 
 int main() 
 {
 	// Clear the screen
 	clearscreen();
 
-	// initialize key map
-	//initkeymap();
+	// Initialize our keyboard
+	initkeymap();
 
-	// Max user string 100 chars
-	char userString[100] = {};
+	// Initialize interrupts
+	idt_install();
+    isrs_install();
+    irq_install();
 
-	/*Loops menu infinitely 
-	while(1==1)
-	{
-		printf("Please type to the screen: "); // Prompt user
-		scanf(userString); // Populates user array with typed chars from keyboard
-		printf(userString); // Prints user array 
-		printf("\n"); // Goes to next line 
-	}
-	*/
-
-	banner();
-
+	// Start executing the kernel process
+	startkernel(prockernel);
+	
 	return 0;
+}
+
+void prockernel()
+{
+	// Create the user processes
+	createproc(proc_a, (void *) 0x10000);
+
+	// Count how many processes are ready to run
+	int userprocs = ready_process_count();
+
+	printf("Kernel Process Started\n");
+	
+	// As long as there is 1 user process that is ready, yield to it so it can run
+	while(userprocs > 0)
+	{
+		// Yield to the user process
+		yield();
+		
+		printf("Kernel Process Resumed\n");
+
+		// Count the remaining ready processes (if any)
+		userprocs = ready_process_count();
+	}
+
+	printf("Kernel Process Terminated\n");
+}
+
+// The user processes
+void proc_a()
+{
+	printf("User Process A Started\n");
+
+	exit();
 }
