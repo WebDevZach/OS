@@ -17,8 +17,15 @@ proc_t *kernel;     // The kernel process
 // Selection must be made from the processes array (proc_t processes[])
 int schedule()
 {
-    int count = 0;
-    return count;
+
+   for(int i = 0; i < MAX_PROCS; i++) {
+    if(processes[i].status == PROC_STATUS_READY && processes[i].type == PROC_TYPE_USER) {
+        next = &processes[i];
+        return 1;
+    }
+   } 
+
+    return 0;
 }
 
 int ready_process_count()
@@ -46,6 +53,23 @@ int ready_process_count()
 // Store the newly created process inside the processes array (proc_t processes[])
 int createproc(void *func, char *stack)
 {
+        // If we have filled our process array, return -1
+    if(process_index >= MAX_PROCS)
+    {
+        return -1;
+    }
+
+    // Create the new kernel process
+    proc_t userproc;
+    userproc.status = PROC_STATUS_READY; // Processes start ready to run
+    userproc.type = PROC_TYPE_USER;    // Process is a kernel process
+
+    // Assign a process ID and add process to process array
+    userproc.pid = process_index;
+    processes[process_index] = userproc;
+    userproc.esp = userproc.ebx = stack;
+    process_index++;
+
     return 0;
 }
 
@@ -85,6 +109,13 @@ int startkernel(void func())
 // Context switch to the kernel process
 void exit()
 {
+    if(running->type == PROC_TYPE_USER) {
+        running->status == PROC_STATUS_TERMINATED;
+        next = kernel;
+        contextswitch();
+    } else {
+        return;
+    }
     return;
 }
 
@@ -95,6 +126,16 @@ void exit()
 // The next process should have already been selected via scheduling
 void yield()
 {
+    running->status = PROC_STATUS_READY;
+
+    if(running->type == PROC_TYPE_USER) {
+        next = kernel;
+        contextswitch();
+    } else {
+        schedule();
+        contextswitch();
+    }
+
     return;
 }
 
