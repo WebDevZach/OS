@@ -1,5 +1,6 @@
 #include "./idt.h"
 #include "./io.h"
+#include "./multitasking.h"
 
 extern  void _isr0();
 extern  void _isr1();
@@ -34,6 +35,7 @@ extern  void _isr29();
 extern  void _isr30();
 extern  void _isr31();
 extern  void _syscall();
+void context_switch_isr(struct regs *r, proc_t **running, proc_t **next);
 
 void isrs_install()
 {
@@ -74,19 +76,80 @@ void isrs_install()
 	
 }
 
-extern  void _fault_handler(struct regs *r)
+extern void _syscall_isr(struct regs *r)
 {
-                                    
-    if (r -> int_no == (uint32)-0x80){      // heh, unsigned, lazy
-        printf("syscall!\n");		// TESTING
-        //printf(toString(r -> err_code, 10));
-		//syscall_stub(r, r -> err_code);
+	uint32 syscall = r->eax;
+
+	if (syscall == 0x01)
+	{
+		proc_t **running = (proc_t **)r->ebx;
+		proc_t **next = (proc_t **)r->ecx;
+		context_switch_isr(r, running, next);
+	}
+}
+
+// Context switching function
+// This function will save the context of the running process (proc_t running)
+// and switch to the context of the next process we want to run (proc_t next)
+// The running and next processes must both be valid for this function to work
+// if they are not, our OS will certainly crash
+void context_switch_isr(struct regs *r, proc_t **running, proc_t **next)
+{
+    // Store all the current register values inside the process that is running
+
+    (*running)->eax    = r->eax;
+    (*running)->ebx    = r->ebx;
+    (*running)->ecx    = r->ecx;
+    (*running)->edx    = r->edx;
+
+    (*running)->esi    = r->esi;
+    (*running)->edi    = r->edi;
+
+    (*running)->ebp    = (void *)r->ebp;
+    (*running)->esp    = (void *)r->esp;
+
+    (*running)->eflags = r->eflags;
+	(*running)->cs 	   = r->cs;
+	(*running)->eip	   = (void *)r->eip;
+
+	if (*next == 0 || next == 0 || (*next)->eip == 0)
+	{
+		printf("\nERROR: Could not perform context switch. Process was null!\n");
+		for(;;){}
 		return;
-    }
+	}
+
+    // Start running the next process
     
+    *running = *next;
+    (*running)->status = PROC_STATUS_RUNNING;
+
+    // Reload all the registers previously saved from the process we want to run
+
+	r->eax    = (uint32)(*next)->eax;
+    r->ebx    = (uint32)(*next)->ebx;
+    r->ecx    = (uint32)(*next)->ecx;
+    r->edx    = (uint32)(*next)->edx;
+
+    r->esi    = (uint32)(*next)->esi;
+    r->edi    = (uint32)(*next)->edi;
+
+    r->ebp    = (uint32)(*next)->ebp;
+    r->esp    = (uint32)(*next)->esp;
+
+	uint32 *new_esp = (uint32 *)((*next)->esp + 8);
+
+    new_esp[2] = (uint32)(*next)->eflags;
+
+	if ((uint32)(*next)->cs == 0)
+	{
+		new_esp[1] = (uint32)r->cs;
+	}
+	else
+	{
+		new_esp[1] = (uint32)(*next)->cs;
+	}
+
 	
-    if (r->int_no < 32)
-    {
-		//kpanic(r);
-    }
+	new_esp[0] = (uint32)(*next)->eip;
 }

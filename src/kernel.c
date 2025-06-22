@@ -31,10 +31,10 @@ int main()
 void prockernel()
 {
 	// Create the user processes
-	createproc(proc_a, (void *) 0x10000);
-	createproc(proc_b, (void *) 0x20000);
-	createproc(proc_c, (void *) 0x30000);
-	createproc(proc_d, (void *) 0x40000);
+	 createproc(proc_a, (void *) 0x10000);
+	 createproc(proc_b, (void *) 0x20000);
+	 createproc(proc_c, (void *) 0x30000);
+	 createproc(proc_d, (void *) 0x40000);
 
 	// Count how many processes are ready to run
 	int userprocs = ready_process_count();
@@ -44,6 +44,7 @@ void prockernel()
 	// As long as there is 1 user process that is ready, yield to it so it can run
 	while(userprocs > 0)
 	{
+
 		// Yield to the user process
 		yield();
 		

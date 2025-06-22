@@ -42,7 +42,7 @@ global _isr31
 global _syscall
 
 [extern kpanic]
-[extern _fault_handler]
+[extern _syscall_isr]
 
 _isr0:
 	cli
@@ -204,9 +204,9 @@ _isr31:
 
 _syscall:
 	cli
-	push eax
-	push word 0x0080
-	jmp isr_common_stub
+	push 0x00000000
+	push 0x00000080
+	jmp isr_common_stub_syscall
 
 ;extern kpanic
 
@@ -224,7 +224,32 @@ isr_common_stub:
 	mov gs, ax
 	mov eax, esp                   ; Push us the stack
 	push eax
-	mov eax, _fault_handler		   ; checks if interrupt number < 32 (if it represents an exception)
+	;mov eax, _syscall_isr		   ; execute the system call
+                                   ; prints exception message and halts system.
+	;call eax	                   ; A special call, preserves the 'eip' register
+	pop eax
+	pop gs
+	pop fs
+	pop es
+	pop ds
+	popa
+	add esp, 8	                   ; Cleans up the pushed error code and pushed ISR number
+	iret		                   ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
+
+isr_common_stub_syscall:
+	pusha
+	push ds
+	push es
+	push fs
+	push gs
+	mov ax, 0x10                   ; Load the Kernel Data Segment descriptor!
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov eax, esp                   ; Push us the stack
+	push eax
+	mov eax, _syscall_isr		   ; executes the syscall based on the argument eax
                                    ; prints exception message and halts system.
 	call eax	                   ; A special call, preserves the 'eip' register
 	pop eax
@@ -233,6 +258,7 @@ isr_common_stub:
 	pop es
 	pop ds
 	popa
+	mov esp, [esp - 20]
 	add esp, 8	                   ; Cleans up the pushed error code and pushed ISR number
 	iret		                   ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
 	

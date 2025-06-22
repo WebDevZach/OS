@@ -18,6 +18,7 @@ proc_t *kernel;     // The kernel process
 int schedule()
 {
 
+    // Loops through all user processes for a user process that is ready and then sets it to next
    for(int i = 0; i < MAX_PROCS; i++) {
     if(processes[i].status == PROC_STATUS_READY && processes[i].type == PROC_TYPE_USER) {
         next = &processes[i];
@@ -62,12 +63,15 @@ int createproc(void *func, char *stack)
     // Create the new kernel process
     proc_t userproc;
     userproc.status = PROC_STATUS_READY; // Processes start ready to run
-    userproc.type = PROC_TYPE_USER;    // Process is a kernel process
+    userproc.type = PROC_TYPE_USER;    // Process is a user process
+    userproc.esp = stack; // assign top and bottom of the stack
+    userproc.ebp = stack;
+    userproc.eip = func;
 
     // Assign a process ID and add process to process array
     userproc.pid = process_index;
     processes[process_index] = userproc;
-    userproc.esp = userproc.ebx = stack;
+    
     process_index++;
 
     return 0;
@@ -109,11 +113,15 @@ int startkernel(void func())
 // Context switch to the kernel process
 void exit()
 {
+    // Check if the process is a user or kernel process
     if(running->type == PROC_TYPE_USER) {
-        running->status == PROC_STATUS_TERMINATED;
-        next = kernel;
+        running->status = PROC_STATUS_TERMINATED; // changes status to terminated
+        next = kernel; // puts the kernel process as the next process
         contextswitch();
+        running = next; 
+        running->status = PROC_STATUS_RUNNING;
     } else {
+        running->status = PROC_STATUS_TERMINATED;
         return;
     }
     return;
@@ -126,14 +134,20 @@ void exit()
 // The next process should have already been selected via scheduling
 void yield()
 {
-    running->status = PROC_STATUS_READY;
+    running->status = PROC_STATUS_READY; // changes process status to ready
 
+    //Check if the process is a user or kernel process
     if(running->type == PROC_TYPE_USER) {
-        next = kernel;
-        contextswitch();
+        next = kernel; // switch to kernel
+        contextswitch(); 
+        running = next; // sets the running process
+        running->status = PROC_STATUS_RUNNING; // changes the running process status to running 
+ 
     } else {
-        schedule();
-        contextswitch();
+        schedule(); // schedules the next user process
+        contextswitch(); // switches to that user process
+        running = next; 
+        running->status = PROC_STATUS_RUNNING; 
     }
 
     return;
