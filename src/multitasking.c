@@ -18,13 +18,26 @@ proc_t *kernel;     // The kernel process
 int schedule()
 {
 
-    // Loops through all user processes for a user process that is ready and then sets it to next
-   for(int i = 0; i < MAX_PROCS; i++) {
+    // Starts index for the loop at the process that was created after the previous proccess
+      int i = prev->pid + 1;
+    
+    // Puts a ready process up next searches after the previous pid number in the array 
+   for(; i < MAX_PROCS; i++) {
     if(processes[i].status == PROC_STATUS_READY && processes[i].type == PROC_TYPE_USER) {
         next = &processes[i];
         return 1;
     }
    } 
+
+   // Loops back once the pid index reaches the end of the array 
+   if(ready_process_count() > 0) {
+        for(int x = 0; x < MAX_PROCS; x++) {
+         if(processes[x].status == PROC_STATUS_READY && processes[x].type == PROC_TYPE_USER) {
+            next = &processes[x];
+            return 1;
+            }
+         }
+   }
 
     return 0;
 }
@@ -103,6 +116,7 @@ int startkernel(void func())
 
     // Assign the kernel to the running process and execute
     running = kernel;
+    prev = kernel;
     func();
 
     return 0;
@@ -115,6 +129,7 @@ void exit()
 {
     // Check if the process is a user or kernel process
     if(running->type == PROC_TYPE_USER) {
+        prev = running;
         running->status = PROC_STATUS_TERMINATED; // changes status to terminated
         next = kernel; // puts the kernel process as the next process
         contextswitch();
@@ -138,6 +153,7 @@ void yield()
 
     //Check if the process is a user or kernel process
     if(running->type == PROC_TYPE_USER) {
+        prev = running;
         next = kernel; // switch to kernel
         contextswitch(); 
         running = next; // sets the running process

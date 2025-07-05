@@ -8,6 +8,7 @@ void proc_a();
 void proc_b();
 void proc_c();
 void proc_d();
+void proc_e();
 
 int main() 
 {
@@ -35,11 +36,12 @@ void prockernel()
 	 createproc(proc_b, (void *) 0x20000);
 	 createproc(proc_c, (void *) 0x30000);
 	 createproc(proc_d, (void *) 0x40000);
+	  createproc(proc_e, (void *) 0x50000);
 
 	// Count how many processes are ready to run
 	int userprocs = ready_process_count();
 
-	printf("Kernel Process Started\n");
+	printf("Kernel Process Starting ...\n");
 	
 	// As long as there is 1 user process that is ready, yield to it so it can run
 	while(userprocs > 0)
@@ -47,20 +49,19 @@ void prockernel()
 
 		// Yield to the user process
 		yield();
-		
-		printf("Kernel Process Resumed\n");
+	
 
 		// Count the remaining ready processes (if any)
 		userprocs = ready_process_count();
 	}
 
-	printf("Kernel Process Terminated\n");
+	printf("\nKernel Process Exiting ...\n");
 }
 
 // The user processes
 void proc_a()
 {
-	printf("User Process A Started\n");
+	printf("A");
 
 	exit();
 }
@@ -68,11 +69,11 @@ void proc_a()
 // The user processes
 void proc_b()
 {
-	printf("User Process B Started\n");
+	printf("B");
 
 	yield();
 
-	printf("User Process B Resumed\n");
+	printf("B");
 
 	exit();
 }
@@ -80,15 +81,19 @@ void proc_b()
 // The user processes
 void proc_c()
 {
-	printf("User Process C Started\n");
+	printf("C");
 
 	yield();
 
-	printf("User Process C Resumed\n");
+	printf("C");
 
 	yield();
 
-	printf("User Process C Resumed\n");
+	printf("C");
+
+	yield();
+
+	printf("C");
 
 	exit();
 }
@@ -96,19 +101,27 @@ void proc_c()
 // The user processes
 void proc_d()
 {
-	printf("User Process D Started\n");
+	printf("D");
 
 	yield();
 
-	printf("User Process D Resumed\n");
+	printf("D");
 
 	yield();
 
-	printf("User Process D Resumed\n");
+	printf("D");
+
+	exit();
+}
+
+// The user processes
+void proc_e()
+{
+	printf("E");
 
 	yield();
 
-	printf("User Process D Resumed\n");
+	printf("E");
 
 	exit();
 }
