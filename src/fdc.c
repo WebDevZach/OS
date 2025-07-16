@@ -1,7 +1,7 @@
 #include "./types.h"
+#include "./io.h"
 #include "./dma.h"
 #include "./irq.h"
-#include "./io.h"
 // standard IRQ number for floppy controllers
 static const int floppy_irq = 6;
 
@@ -335,6 +335,7 @@ void floppy_reset(int firstTime){
  */
 
 int floppy_write(int drive, uint32 lba, void* address, uint16 count){
+    count--;
     initFloppyDMA((uint32) address, count);
 
     drive_select(drive);
