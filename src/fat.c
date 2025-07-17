@@ -53,6 +53,16 @@ int closeFile()
 
 int createFile(char *filename, char *ext)
 {
+
+    file_t newFile;
+
+    currentDirectory // need address to point to for where the dir entry for the new file is going to be
+
+
+    stringcopy((char*) newFile.directoryEntry->filename, filename, 8);
+    stringcopy((char*) newFile.directoryEntry->ext, ext, 3);
+
+
     return 0;
 }
 

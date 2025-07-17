@@ -61,7 +61,7 @@ typedef struct
 
     // Set to 0 if not opened
     // Set to non-zero if opened
-    char isOpened;
+    char isOpened; // is closed by default 
 
     // The directory entry for the file, containing all its metadata
     directory_entry_t *directoryEntry;
