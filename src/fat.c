@@ -56,13 +56,37 @@ int createFile(char *filename, char *ext)
 
     file_t newFile;
 
-    currentDirectory // need address to point to for where the dir entry for the new file is going to be
+    uint8 *newEntryPositionPointer = currentDirectory.startingAddress; // need address to point to where the dir entry for the new file is going to be
 
+    while(*newEntryPositionPointer != 0x00) {
+        newEntryPositionPointer += 32;
+    }
 
-    stringcopy((char*) newFile.directoryEntry->filename, filename, 8);
-    stringcopy((char*) newFile.directoryEntry->ext, ext, 3);
+    newFile.directoryEntry = (directory_entry_t *) newEntryPositionPointer;
 
+    stringcopy(filename, (char*) newFile.directoryEntry->filename, 8);
+    stringcopy(ext, (char*) newFile.directoryEntry->ext, 3);
 
+    int index = 2;
+
+    while(fat0->clusters[index] != 0x0000) {
+        index++; 
+    }
+
+    fat0->clusters[index] = 0xffff;
+    fat1->clusters[index] = 0xffff;
+
+    newFile.directoryEntry->fileSize = 512;
+    newFile.directoryEntry->startingCluster = index;
+
+    uint8 buffer[512] = {0};
+    floppy_write(0, index + 31, (void *)buffer, 512);
+    floppy_write(0, 1, (void *)fat0, sizeof(fat_t));
+    floppy_write(0, 10, (void *)fat1, sizeof(fat_t));
+    floppy_write(0, 19, (void *)currentDirectory.startingAddress, 512 * 14);
+
+    currentFile.isOpened = 0;
+    
     return 0;
 }
 
