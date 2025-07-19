@@ -46,8 +46,59 @@ void init_fs()
     currentFile.startingAddress = 0;
 }
 
+int findNextFATEntry() {
+     int index = 2;
+
+    while(fat0->clusters[index] != 0x0000) {
+        index++; 
+    }
+    return index; 
+}
+
 int closeFile()
 {
+
+if(!currentFile.isOpened) {
+    return -1;
+}
+
+//file.index shows the point where the file is at check if it is check if it greater than file size
+
+    if(currentFile.index > currentFile.directoryEntry->fileSize){
+        currentFile.directoryEntry->fileSize += 512; // increase file size 
+
+        int lastFATEntry = currentFile.directoryEntry->startingCluster;
+
+        //Find end of cluster for file from FAT 
+        while(fat0->clusters[lastFATEntry] != 0xffff) {
+            lastFATEntry = fat0->clusters[lastFATEntry];
+        }
+        
+        // Next available spot on FAT 
+        int nextAvailableFATEntry = findNextFATEntry();
+
+
+        fat0->clusters[lastFATEntry] = nextAvailableFATEntry;
+        fat0->clusters[nextAvailableFATEntry] = 0xffff;
+        fat1->clusters[lastFATEntry] = nextAvailableFATEntry;
+        fat1->clusters[nextAvailableFATEntry] = 0xffff;
+    }
+
+    int fileClusterSize = currentFile.directoryEntry->fileSize / 512;  
+    int cluster = currentFile.directoryEntry->startingCluster;
+
+    for(int i = 0; i < fileClusterSize; i++) {
+        floppy_write(0, cluster + 31, (void *) currentFile.startingAddress + (i * 512), 512);
+        cluster = fat0->clusters[cluster];
+    }
+
+
+    floppy_write(0, 1, (void *)fat0, sizeof(fat_t));
+    floppy_write(0, 10, (void *)fat1, sizeof(fat_t));
+    floppy_write(0, 19, (void *)currentDirectory.startingAddress, 512);
+    currentFile.isOpened = 0;
+
+
     return 0;
 }
 
@@ -83,7 +134,7 @@ int createFile(char *filename, char *ext)
     floppy_write(0, index + 31, (void *)buffer, 512);
     floppy_write(0, 1, (void *)fat0, sizeof(fat_t));
     floppy_write(0, 10, (void *)fat1, sizeof(fat_t));
-    floppy_write(0, 19, (void *)currentDirectory.startingAddress, 512 * 14);
+    floppy_write(0, 19, (void *)currentDirectory.startingAddress, 512);
 
     currentFile.isOpened = 0;
     
@@ -93,7 +144,7 @@ int createFile(char *filename, char *ext)
 int deleteFile()
 {
 
-    if(currentFile.isOpened = 0) {
+    if(currentFile.isOpened == 0) {
         return -1;
     }
 
@@ -101,24 +152,41 @@ int deleteFile()
     int cluster = currentFile.directoryEntry->startingCluster;
 
     while(fat0->clusters[cluster] != 0xffff) {
-            int nextCluster = fat0->clusters[cluster]
+            int nextCluster = fat0->clusters[cluster];
             fat0->clusters[cluster] = 0x0000;
             fat1->clusters[cluster] = 0x0000;
             cluster = nextCluster;
     }
 
     fat0->clusters[cluster] = 0x0000;
+    fat1->clusters[cluster] = 0x0000;
 
-    uint8 *newEntryPositionPointer = currentDirectory.startingAddress; // need address to point to where the dir entry for the new file is going to be
+    directory_entry_t *directoryEntry = (directory_entry_t *)currentDirectory.startingAddress;
 
-    while(*(newEntryPositionPointer + 56) != currentFile.directoryEntry->filename) {
-        newEntryPositionPointer += 32;
+    int maxEntries = 512 / sizeof(directory_entry_t); 
+    int i = 0;
+
+    while (i < maxEntries && !(stringcompare(directoryEntry->filename, currentDirectory.directoryEntry->filename, 8))) {
+    directoryEntry++;
+    i++;
     }
 
+    if (i == maxEntries) {
+    return -2; // file not found in directory
+    }
 
+    uint8 *bytePointer = (uint8 *) directoryEntry;
 
+    for(int i = 0; i < 32; i++) {
+        *bytePointer = 0x00;
+        bytePointer++;
+    }
 
+    floppy_write(0, 1, (void *)fat0, sizeof(fat_t));
+    floppy_write(0, 10, (void *)fat1, sizeof(fat_t));
+    floppy_write(0, 19, (void *)currentDirectory.startingAddress, 512);
 
+    
     return 0;
 }
 
@@ -296,3 +364,4 @@ int openFile(char *filename, char *ext)
     // If we did not find the file return -3
 	return -3;
 }
+
