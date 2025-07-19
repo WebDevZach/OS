@@ -92,6 +92,33 @@ int createFile(char *filename, char *ext)
 
 int deleteFile()
 {
+
+    if(currentFile.isOpened = 0) {
+        return -1;
+    }
+
+
+    int cluster = currentFile.directoryEntry->startingCluster;
+
+    while(fat0->clusters[cluster] != 0xffff) {
+            int nextCluster = fat0->clusters[cluster]
+            fat0->clusters[cluster] = 0x0000;
+            fat1->clusters[cluster] = 0x0000;
+            cluster = nextCluster;
+    }
+
+    fat0->clusters[cluster] = 0x0000;
+
+    uint8 *newEntryPositionPointer = currentDirectory.startingAddress; // need address to point to where the dir entry for the new file is going to be
+
+    while(*(newEntryPositionPointer + 56) != currentFile.directoryEntry->filename) {
+        newEntryPositionPointer += 32;
+    }
+
+
+
+
+
     return 0;
 }
 
