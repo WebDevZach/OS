@@ -92,11 +92,11 @@ if(!currentFile.isOpened) {
         cluster = fat0->clusters[cluster];
     }
 
-
+    currentFile.isOpened = 0;
     floppy_write(0, 1, (void *)fat0, sizeof(fat_t));
     floppy_write(0, 10, (void *)fat1, sizeof(fat_t));
     floppy_write(0, 19, (void *)currentDirectory.startingAddress, 512);
-    currentFile.isOpened = 0;
+    
 
 
     return 0;
@@ -129,14 +129,14 @@ int createFile(char *filename, char *ext)
 
     newFile.directoryEntry->fileSize = 512;
     newFile.directoryEntry->startingCluster = index;
+    
+    currentFile.isOpened = 0;
 
     uint8 buffer[512] = {0};
     floppy_write(0, index + 31, (void *)buffer, 512);
     floppy_write(0, 1, (void *)fat0, sizeof(fat_t));
     floppy_write(0, 10, (void *)fat1, sizeof(fat_t));
-    floppy_write(0, 19, (void *)currentDirectory.startingAddress, 512);
-
-    currentFile.isOpened = 0;
+    floppy_write(0, 19, (void *)currentDirectory.startingAddress, 512 * 14);
     
     return 0;
 }
@@ -147,7 +147,6 @@ int deleteFile()
     if(currentFile.isOpened == 0) {
         return -1;
     }
-
 
     int cluster = currentFile.directoryEntry->startingCluster;
 
@@ -166,10 +165,12 @@ int deleteFile()
     int maxEntries = 512 / sizeof(directory_entry_t); 
     int i = 0;
 
-    while (i < maxEntries && !(stringcompare(directoryEntry->filename, currentDirectory.directoryEntry->filename, 8))) {
+
+    while (i < maxEntries && !(stringcompare(directoryEntry->filename, currentFile.directoryEntry->filename, 8))) {
     directoryEntry++;
     i++;
     }
+
 
     if (i == maxEntries) {
     return -2; // file not found in directory
@@ -182,10 +183,11 @@ int deleteFile()
         bytePointer++;
     }
 
+    currentFile.isOpened = 0;
+
     floppy_write(0, 1, (void *)fat0, sizeof(fat_t));
     floppy_write(0, 10, (void *)fat1, sizeof(fat_t));
-    floppy_write(0, 19, (void *)currentDirectory.startingAddress, 512);
-
+    floppy_write(0, 19, (void *)currentDirectory.startingAddress, 512 * 14);
     
     return 0;
 }
@@ -364,4 +366,5 @@ int openFile(char *filename, char *ext)
     // If we did not find the file return -3
 	return -3;
 }
+
 
